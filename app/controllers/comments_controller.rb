@@ -1,5 +1,6 @@
 class CommentsController < ApplicationController
   before_action :set_comment, only: [:show, :edit, :update, :destroy]
+  before_action :validate_create_payload, only: [:create]
 
   # GET /comments
   # GET /comments.json
@@ -70,5 +71,14 @@ class CommentsController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def comment_params
       params.require(:comment).permit(:name, :title, :length)
+    end
+
+    def validate_create_payload
+      errors = JSON::Validator.fully_validate(Schemas::Comment.load, comment_params.to_h)
+
+      unless errors.empty?
+        errors << 'Please visit http://docs.comments.apiary.io/ for a full API reference'
+        render json: { errors: errors }, status: :unprocessable_entity
+      end
     end
 end
